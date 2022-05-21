@@ -9,12 +9,33 @@ from queue import Queue
 В лице потребителя - студент, сдающий соответсвующие работы преподавателям.
 """
 
+
+def zachet():
+    l = []
+    print("\t\tЗачётная книжка")
+    while not q2.empty():
+        s = q2.get()
+        print(f"Преподаватель: {s[0]} id дисциплины: {s[1]} оценка: {s[2]}")
+        l.append(s[2])
+        if q2.empty():
+            break
+    if 2 in l:
+        print('Студент будет отчислен')
+    elif 3 in l:
+        print('Студент не будет получать стипендию')
+    elif 4 in l:
+        print('Студент будет получать обучную стипендию')
+    else:
+        print('Студент будет получать повышенную стипендию')
+
+
 def peresdacha():
+    lock.acquire()
     ls = []
-    while True:
+    while not qe.empty():
         s = qe.get()
         r = random.randint(2,5)
-        print(f"Студент пересдал задание с id: {s[1]} преподавателю {s[0]} с оценкой {r}")
+        print(f"Студент пересдал дисциплину с id: {s[1]} преподавателю {s[0]} с оценкой {r}")
         ls.append(
             {
                 "id": s[1],
@@ -22,19 +43,19 @@ def peresdacha():
                 "Оценка": r
             }
         )
-        if qe.empty():
-            for i in ls:
-                if i["Оценка"] == 2:
-                    print(f"Студент не пересдал задание с id: {i['id']}, в связи с этим он отчислен")
-            break
+    for i in ls:
+        q2.put([i["Преподаватель"], i["id"], i["Оценка"]])
+    lock.release()
+    zachet()
 
 
 def consumer():
+    lock.acquire()
     lst = []
-    while True:
+    while not q.empty():
         s = q.get()
         r = random.randint(2,5)
-        print(f"Студент сдал задание с id: {s[1]} преподавателю {s[0]} с оценкой {r}")
+        print(f"Студент сдал дисциплину с id: {s[1]} преподавателю {s[0]} с оценкой {r}")
         lst.append(
             {
                 "id": s[1],
@@ -42,12 +63,13 @@ def consumer():
                 "Оценка": r
             }
         )
-        if q.empty():
-            for i in lst:
-                if i["Оценка"] == 2:
-                    print(f"Студент не сдал задание с id: {i['id']} и отправляется на пересдачу")
-                    qe.put([i["Преподаватель"], i["id"]])
-            break
+    for i in lst:
+        if i["Оценка"] == 2:
+            print(f"Студент не сдал дисциплину с id: {i['id']} и отправляется на пересдачу")
+            qe.put([i["Преподаватель"], i["id"]])
+        else:
+            q2.put([i["Преподаватель"], i["id"], i["Оценка"]])
+    lock.release()
 
 
 def producer(lst):
@@ -66,6 +88,7 @@ if __name__ == "__main__":
     lock = Lock()
     q = Queue()
     qe = Queue()
+    q2 = Queue()
     th1 = Thread(target=producer(lst)).start()
     th2 = Thread(target=consumer).start()
     th3 = Thread(target=peresdacha).start()
