@@ -1,7 +1,6 @@
 import math
 from threading import Lock, Thread
 from queue import Queue
-from time import sleep
 
 
 def func2():
