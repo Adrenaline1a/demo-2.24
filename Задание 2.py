@@ -4,12 +4,10 @@ from queue import Queue
 
 
 def func2():
-    while True:
+    while not q.empty():
         s = q.get()
-        y = 1/s
+        y = math.cos(s)
         print(f'y = {y}')
-        if q.empty():
-            break
 
 
 def func1():
@@ -26,7 +24,6 @@ def func1():
         S += S2
         print(f"S = {S}")
         q.put(S)
-
     lock.release()
 
 
